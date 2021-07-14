@@ -47,6 +47,7 @@ public class Registration_Activity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Please Wait...");
         progressDialog.setCancelable(false);
+
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
@@ -65,85 +66,89 @@ public class Registration_Activity extends AppCompatActivity {
                 progressDialog.show();
                 String name = reg_name.getText().toString();
                 String email = reg_email.getText().toString();
-                String Password = reg_password.getText().toString();
-                String CPassword = reg_cPassword.getText().toString();
+                String password = reg_password.getText().toString();
+                String cPassword = reg_cPassword.getText().toString();
+                String status = "Hey there, I'm Using this App";
 
 
                 if (TextUtils.isEmpty(name) || TextUtils.isEmpty(email) ||
-                        TextUtils.isEmpty(Password) || TextUtils.isEmpty(CPassword))
-                {
-                    Toast.makeText(Registration_Activity.this, "Enter Valid Data", Toast.LENGTH_SHORT).show();
+                        TextUtils.isEmpty(password) || TextUtils.isEmpty(cPassword)) {
                     progressDialog.dismiss();
-                }else if (!email.matches(emailPattern))
-                {
+                    Toast.makeText(Registration_Activity.this, "Please Enter Valid Data", Toast.LENGTH_SHORT).show();
+                } else if (!email.matches(emailPattern)) {
                     reg_email.setError("Please Enter Valid Email");
+                    progressDialog.dismiss();
+
                     Toast.makeText(Registration_Activity.this, "Please Enter Valid Email", Toast.LENGTH_SHORT).show();
+                } else if (!password.equals(cPassword)) {
                     progressDialog.dismiss();
-                }else if (!Password.equals(CPassword)){
-                    Toast.makeText(Registration_Activity.this, "Password Doesn't Match", Toast.LENGTH_SHORT).show();
+
+                    Toast.makeText(Registration_Activity.this, "Password does not Match", Toast.LENGTH_SHORT).show();
+                } else if (password.length() < 6) {
                     progressDialog.dismiss();
-                }else if (Password.length()<6){
-                    Toast.makeText(Registration_Activity.this, "Enter 6 Characters Password", Toast.LENGTH_SHORT).show();
-                    progressDialog.dismiss();
-                }else{
-                    auth.createUserWithEmailAndPassword(email,Password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+
+                    Toast.makeText(Registration_Activity.this, "Enter 6 Character Password", Toast.LENGTH_SHORT).show();
+                } else {
+                    auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (task.isSuccessful()){
-                                
-                                Toast.makeText(Registration_Activity.this, "User Created Successfully", Toast.LENGTH_SHORT).show();
-                                DatabaseReference reference = database.getReference().child("user").child(auth.getUid());
-                                StorageReference storageReference = storage.getReference().child("upload").child(auth.getUid());
-                                if (imageUri!=null){
+                            if (task.isSuccessful()) {
+                                DatabaseReference reference=database.getReference().child("user").child(auth.getUid());
+                                StorageReference storageReference=storage.getReference().child("uplod").child(auth.getUid());
+
+                                if(imageUri!=null)
+                                {
                                     storageReference.putFile(imageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                                         @Override
                                         public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                                            if (task.isSuccessful()){
+                                            if(task.isSuccessful())
+                                            {
                                                 storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                                     @Override
                                                     public void onSuccess(Uri uri) {
-                                                        imageURI = uri.toString();
-                                                        Users users = new Users(auth.getUid(),name,email,imageURI);
+                                                        imageURI=uri.toString();
+                                                        Users users=new Users(auth.getUid(),name,email,imageURI,status);
                                                         reference.setValue(users).addOnCompleteListener(new OnCompleteListener<Void>() {
                                                             @Override
                                                             public void onComplete(@NonNull Task<Void> task) {
-                                                                if (task.isSuccessful()){
+                                                                if(task.isSuccessful())
+                                                                {
+                                                                    progressDialog.dismiss();
                                                                     startActivity(new Intent(Registration_Activity.this,Home_Activity.class));
                                                                 }else {
-                                                                    Toast.makeText(Registration_Activity.this, "Error in Creating User", Toast.LENGTH_SHORT).show();
+                                                                    Toast.makeText(Registration_Activity.this, "Error in Creating a New user", Toast.LENGTH_SHORT).show();
                                                                 }
-
                                                             }
                                                         });
                                                     }
                                                 });
                                             }
-
                                         }
                                     });
                                 }else {
-                                    imageURI = "https://firebasestorage.googleapis.com/v0/b/chatapp-ad2d0.appspot.com/o/profile.jpg?alt=media&token=d0db2722-10e8-45f5-a862-2b1743cce366";
-                                    Users users = new Users(auth.getUid(),name,email,imageURI);
+                                    String staus="Hey There I'm Using This Application";
+                                    imageURI="https://firebasestorage.googleapis.com/v0/b/chatapp-ad2d0.appspot.com/o/profile.jpg?alt=media&token=d0db2722-10e8-45f5-a862-2b1743cce366";
+                                    Users users=new Users(auth.getUid(),name,email,imageURI,staus);
                                     reference.setValue(users).addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
-                                            if (task.isSuccessful()){
-                                                progressDialog.dismiss();
+                                            if(task.isSuccessful())
+                                            {
                                                 startActivity(new Intent(Registration_Activity.this,Home_Activity.class));
                                             }else {
-                                                Toast.makeText(Registration_Activity.this, "Error in Creating User", Toast.LENGTH_SHORT).show();
+                                                Toast.makeText(Registration_Activity.this, "Error in Creating a New user", Toast.LENGTH_SHORT).show();
                                             }
-
                                         }
                                     });
                                 }
-                            }else {
-                                progressDialog.dismiss();
-                                Toast.makeText(Registration_Activity.this, "Something went Wrong", Toast.LENGTH_SHORT).show();
-                            }
 
+                            } else {
+                                progressDialog.dismiss();
+                                Toast.makeText(Registration_Activity.this, "Something Went Wrong", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
+
                 }
             }
         });
@@ -158,13 +163,13 @@ public class Registration_Activity extends AppCompatActivity {
             }
         });
 
+
         txt_signin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(Registration_Activity.this,Login_Activity.class));
+                startActivity(new Intent(Registration_Activity.this, Login_Activity.class));
             }
         });
-
 
     }
 
@@ -172,9 +177,11 @@ public class Registration_Activity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode==10){
-            if (data!=null){
-                imageUri = data.getData();
+        if(requestCode==10)
+        {
+            if(data!=null)
+            {
+                imageUri=data.getData();
                 profile_image.setImageURI(imageUri);
             }
         }
